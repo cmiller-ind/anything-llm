@@ -7,12 +7,15 @@
  * the full body is injected only when the skill is judged relevant.
  *
  * Detection is two-stage:
- *   1. Relevance ranking. When there are more skills than we want to inject,
- *      the native embedding reranker scores each skill's metadata (name +
- *      description) against the current prompt and recent history, and the top
- *      N are kept. This is the "automatic detection".
- *   2. Thresholding. When the reranker is unavailable or there are few skills,
- *      all skills are injected (they are cheap metadata + a bounded body).
+ *   1. Relevance ranking. The native embedding reranker scores each skill's
+ *      metadata (name + description) against the current prompt and recent
+ *      history, and the top N (injection limit) are kept.
+ *   2. Thresholding. Skills whose relevance falls below the configured
+ *      threshold (sigmoid of the rerank score, default 0.5) are dropped, so an
+ *      irrelevant skill is never injected just because few skills exist.
+ *      Setting the threshold to 0 disables filtering (legacy behavior).
+ *      When the reranker is unavailable the first N skills are used as a
+ *      fallback (the admin UI surfaces this via the detection status).
  *
  * The result is appended to the system prompt via `promptWithSkills`, which is
  * called from the shared `promptWithMemories` path so every chat (agent or not)
@@ -28,6 +31,19 @@ const MIN_INJECTED_SKILLS = 1;
 const MAX_INJECTED_SKILLS_CEILING = 50;
 /** Hard cap on a single skill's body so a runaway file cannot blow the context. */
 const MAX_SKILL_BODY_CHARS = 12000;
+/**
+ * Default minimum relevance a skill must clear to be injected, on a 0-1
+ * scale. Reranker logits are mapped to probabilities with a sigmoid before
+ * comparison, so 0.5 is the natural "more relevant than not" midpoint.
+ * Overridable via the `markdown_skills_relevance_threshold` system setting.
+ * 0 disables filtering (legacy behavior: always inject up to the limit).
+ */
+const DEFAULT_RELEVANCE_THRESHOLD = 0.5;
+
+/** Map a reranker logit to a 0-1 relevance probability. */
+function sigmoid(logit) {
+  return 1 / (1 + Math.exp(-logit));
+}
 
 /**
  * Resolve the user-configurable injection limit from system settings.
@@ -57,10 +73,39 @@ async function getMaxInjectedSkills() {
 }
 
 /**
+ * Resolve the user-configurable relevance threshold (0-1) from system
+ * settings. Falls back to the default when unset or invalid.
+ * @returns {Promise<number>}
+ */
+async function getRelevanceThreshold() {
+  try {
+    const SystemSettings = require("../../models/systemSettings.js");
+    const raw = await SystemSettings.getValueOrFallback(
+      {
+        label: "markdown_skills_relevance_threshold",
+      },
+      null
+    );
+    if (raw === null) return DEFAULT_RELEVANCE_THRESHOLD;
+    const value = Number(raw);
+    if (isNaN(value) || value < 0 || value > 1)
+      return DEFAULT_RELEVANCE_THRESHOLD;
+    return value;
+  } catch (error) {
+    console.error(
+      "[Skill Detection] Could not read relevance threshold:",
+      error.message
+    );
+    return DEFAULT_RELEVANCE_THRESHOLD;
+  }
+}
+
+/**
  * Status of the most recent skill detection, for surfacing in the admin UI.
  * `mode` is one of:
- *  - "all"      - every skill was injected (at or under the limit)
- *  - "reranked" - the reranker picked the top N
+ *  - "all"      - every skill was injected (at or under the limit, no rerank)
+ *  - "reranked" - the reranker picked the relevant top N (may be fewer than
+ *                 the limit, or even zero, when nothing clears the threshold)
  *  - "fallback" - reranker unavailable; first N skills were used instead
  * `reason` explains a fallback when present.
  */
@@ -71,21 +116,34 @@ function getSkillDetectionStatus() {
 }
 
 /**
- * Rank skills by relevance to the prompt and return the top N.
- * Falls back to alphabetical order when the reranker is unavailable.
+ * Rank skills by relevance to the prompt and return those that clear the
+ * relevance threshold, up to the injection limit.
+ *
+ * - When the threshold is 0, behavior is legacy: every skill at or under the
+ *   limit is injected without reranking, and over the limit the top N are
+ *   taken by score with no minimum.
+ * - Otherwise ALL skills are reranked (even at or under the limit - a
+ *   single lucky-number skill is not injected into a "capital of France"
+ *   prompt) and only skills whose sigmoid(score) >= threshold are kept.
+ *   The result may be fewer than the limit, or empty.
+ *
+ * Falls back to the first N skills (alphabetical) when the reranker is
+ * unavailable.
  * @param {object[]} skills
  * @param {string} prompt
  * @param {object[]} rawHistory
  * @param {number} [maxInjected] - Injection limit (defaults to the system setting).
+ * @param {number} [threshold] - Minimum relevance 0-1 (defaults to the system setting).
  * @returns {Promise<object[]>}
  */
 async function selectRelevantSkills(
   skills,
   prompt,
   rawHistory,
-  maxInjected = DEFAULT_MAX_INJECTED_SKILLS
+  maxInjected = DEFAULT_MAX_INJECTED_SKILLS,
+  threshold = DEFAULT_RELEVANCE_THRESHOLD
 ) {
-  if (skills.length <= maxInjected) {
+  if (threshold <= 0 && skills.length <= maxInjected) {
     lastDetection = { mode: "all", count: skills.length };
     return skills;
   }
@@ -108,8 +166,11 @@ async function selectRelevantSkills(
     const reranked = await reranker.rerank(query, documents, {
       topK: maxInjected,
     });
-    lastDetection = { mode: "reranked", count: reranked.length };
-    return reranked.map((r) => skills[r.rerank_corpus_id]);
+    const relevant = reranked.filter(
+      (r) => sigmoid(r.rerank_score) >= threshold
+    );
+    lastDetection = { mode: "reranked", count: relevant.length };
+    return relevant.map((r) => skills[r.rerank_corpus_id]);
   } catch (error) {
     console.error(
       "[Skill Detection] Reranker failed, using first N skills:",
@@ -173,11 +234,13 @@ async function promptWithSkills({
     }
 
     const maxInjected = await getMaxInjectedSkills();
+    const threshold = await getRelevanceThreshold();
     const relevant = await selectRelevantSkills(
       all,
       prompt,
       rawHistory,
-      maxInjected
+      maxInjected,
+      threshold
     );
     const section = formatSkillsSection(relevant);
     return section ? `${systemPrompt}\n\n${section}` : systemPrompt;

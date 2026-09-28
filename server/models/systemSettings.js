@@ -89,6 +89,7 @@ const SystemSettings = {
     "agent_clarifying_questions_enabled",
     "agent_clarifying_questions_max_per_turn",
     "markdown_skills_max_injected",
+    "markdown_skills_relevance_threshold",
     "custom_app_name",
     "default_system_prompt",
 
@@ -419,6 +420,11 @@ const SystemSettings = {
       if (!Number.isFinite(n) || n < 1) return 5;
       return Math.min(Math.floor(n), 50);
     },
+    markdown_skills_relevance_threshold: (update) => {
+      const n = Number(update);
+      if (!Number.isFinite(n) || n < 0 || n > 1) return 0.5;
+      return Math.round(n * 100) / 100;
+    },
     experimental_live_file_sync: (update) => {
       if (typeof update === "boolean")
         return update === true ? "enabled" : "disabled";
@@ -657,6 +663,12 @@ const SystemSettings = {
           { label: "markdown_skills_max_injected" },
           "5"
         )) || 5
+      ),
+      MarkdownSkillsRelevanceThreshold: Number(
+        (await this.getValueOrFallback(
+          { label: "markdown_skills_relevance_threshold" },
+          "0.5"
+        )) ?? 0.5
       ),
     };
   },
