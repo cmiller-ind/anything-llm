@@ -736,6 +736,13 @@ const TRANSLATIONS = {
         description:
           "ຈຳນວນສູງສຸດຂອງສະກິນ Markdown ທີ່ແກ້ວເຂົ້າໄປໃນ prompt ຂອງລະບົບ ເມື່ອມີສະກິນຫຼາຍກວ່າຈຳນວນນີ້ ຢູ່ຕິດກັບ ຫຼື ຕ່ຳກວ່າ ຈຳນວນສູງສຸດ ສະກິນທັງໝົດຈະຖືກແກ້ວເຂົ້າສະເໝີ",
       },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "ໃຫ້ເອເຈນຖາມຄຳຖາມເພື່ອຄວາມຊັດເຈນ",
         "beta-badge": "BETA",

@@ -775,6 +775,13 @@ const TRANSLATIONS = {
         description:
           "Maksimālais Markdown prasmju skaits, kas tiek ievietots sistēmas uztverē, ja prasmju ir vairāk nekā šis ierobežojums. Pie ierobežojuma vai zem tā, vienmēr tiek ievietotas visas prasmes.",
       },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "Ļauj aģentam uzdot skaidrotas jautājumus",
         "beta-badge": "BETA",

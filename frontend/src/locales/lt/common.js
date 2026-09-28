@@ -777,6 +777,13 @@ const TRANSLATIONS = {
         description:
           "Didžiausias Markdown įgūdžių skaičius, įterpiamų į sistemos užklausą, kai įgūdžių yra daugiau nei šis ribojimas. Pasiekus arba nepasiekus ribos, visada įterpiami visi įgūdžiai.",
       },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "Leisk agentui klausti, kad geriau suprastų",
         "beta-badge": "BETA",

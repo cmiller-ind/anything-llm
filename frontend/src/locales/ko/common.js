@@ -747,6 +747,13 @@ const TRANSLATIONS = {
         description:
           "이 제한보다 스킬이 많을 때 시스템 프롬프트에 주입되는 Markdown 스킬의 최대 수입니다. 제한 이하에서는 항상 모든 스킬이 주입됩니다.",
       },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "대리인에게 추가 질문을 할 수 있도록 허용",
         "beta-badge": "베타",

@@ -774,6 +774,13 @@ const TRANSLATIONS = {
         description:
           "Максимальное количество Markdown-навыков, внедряемых в системный промпт, когда навыков больше, чем этот лимит. При значении на уровне или ниже лимита всегда внедряются все навыки.",
       },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "Предоставьте агенту возможность задавать уточняющие вопросы.",
         "beta-badge": "Бета-версия",

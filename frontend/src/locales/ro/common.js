@@ -1338,6 +1338,13 @@ const TRANSLATIONS = {
         description:
           "Numărul maxim de abilități Markdown injectate în promptul de sistem când există mai multe abilități decât această limită. La limita sau sub ea, toate abilitățile sunt mereu injectate.",
       },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title:
           "Permite agentului să pună întrebări suplimentare pentru a clarifica anumite aspecte.",

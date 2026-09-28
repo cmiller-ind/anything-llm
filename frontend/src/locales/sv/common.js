@@ -768,6 +768,13 @@ const TRANSLATIONS = {
         description:
           "Det maximala antalet Markdown-färdigheter som injiceras i systemprompten när det finns fler färdigheter än denna gräns. Vid eller under gränsen injiceras alltid alla färdigheter.",
       },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "Låt agenten ställa förtydligande frågor",
         "beta-badge": "BETA",

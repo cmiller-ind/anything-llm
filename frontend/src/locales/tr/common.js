@@ -775,6 +775,13 @@ const TRANSLATIONS = {
         description:
           "Bu sınırdan daha fazla beceri olduğunda sistem istemine enjekte edilen Markdown becerilerinin maksimum sayısı. Sınırda veya sınırın altında, her zaman tüm beceriler enjekte edilir.",
       },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title:
           "Temsilcinin, konuyu daha iyi anlaması için açıklayıcı sorular sormasına izin verin.",

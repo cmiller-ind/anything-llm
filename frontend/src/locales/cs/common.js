@@ -777,6 +777,13 @@ const TRANSLATIONS = {
         description:
           "Maximální počet markdown dovedností vložených do systémového promptu, pokud je jich více než tento limit. Při nebo pod limitem se vždy vloží všechny dovednosti.",
       },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "Umožněte zástupci, aby kladl upřesňující otázky.",
         "beta-badge": "BETA",

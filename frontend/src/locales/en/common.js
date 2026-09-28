@@ -752,7 +752,7 @@ const TRANSLATIONS = {
       "intelligent-skill-selection": {
         title: "Intelligent Skill Selection",
         description:
-          "Enable unlimited tools and cut token usage by up to 80% per query — AnythingLLM automatically selects the right skills for every prompt.",
+          "Enable unlimited agent tools and cut token usage by up to 80% per query — AnythingLLM automatically selects the right tools for every prompt. (Applies to agent tools, not markdown skills.)",
         "max-tools": {
           title: "Max Tools",
           description:
@@ -760,9 +760,16 @@ const TRANSLATIONS = {
         },
       },
       "markdown-skill-injection": {
-        title: "Max Markdown Skills Injected",
+        title: "Markdown Skills: Max Injected",
         description:
-          "The maximum number of markdown skills injected into the system prompt when there are more skills than this limit. At or under the limit, all skills are always injected.",
+          "The maximum number of relevant markdown skills injected into the system prompt per chat.",
+      },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
       },
       "clarifying-questions": {
         title: "Allow agent to ask clarifying questions",

@@ -716,6 +716,13 @@ const TRANSLATIONS = {
         description:
           "當技能數量超過此限制時，注入到系統提示中的 Markdown 技能的最大數量。等於或低於限制時，始終注入所有技能。",
       },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "允許經紀人提出確認性問題",
         "beta-badge": "測試版",

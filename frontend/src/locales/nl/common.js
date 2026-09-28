@@ -768,6 +768,13 @@ const TRANSLATIONS = {
         description:
           "Het maximale aantal Markdown vaardigheden dat in de systeem-prompt wordt geïnjecteerd wanneer er meer vaardigheden zijn dan deze limiet. Op of onder de limiet worden altijd alle vaardigheden geïnjecteerd.",
       },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title:
           "Laat de agent vragen stellen om de situatie beter te begrijpen.",

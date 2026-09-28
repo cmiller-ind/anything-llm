@@ -762,6 +762,13 @@ const TRANSLATIONS = {
         description:
           "Số lượng kỹ năng Markdown tối đa được tiêm vào prompt hệ thống khi có nhiều kỹ năng hơn giới hạn này. Tại hoặc dưới giới hạn, tất cả các kỹ năng luôn được tiêm.",
       },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "Cho phép đại lý đặt câu hỏi để làm rõ",
         "beta-badge": "Giai đoạn thử nghiệm",

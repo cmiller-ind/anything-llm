@@ -777,6 +777,13 @@ const TRANSLATIONS = {
         description:
           "Максималният брой Markdown умения, вмъквани в системния промпт, когато има повече умения от този лимит. При или под лимита винаги се вмъкват всички умения.",
       },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "Позволи на агента да задава уточняващи въпроси",
         "beta-badge": "БЕТА",
