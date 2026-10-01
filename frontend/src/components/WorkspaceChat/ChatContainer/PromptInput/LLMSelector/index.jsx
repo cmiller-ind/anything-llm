@@ -1,21 +1,15 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import PreLoader from "@/components/Preloader";
-import ChatModelSelection from "./ChatModelSelection";
-import RouterPickerSelection from "./RouterPickerSelection";
 import { useTranslation } from "react-i18next";
 import { PROVIDER_SETUP_EVENT, SAVE_LLM_SELECTOR_EVENT } from "./action";
-import {
-  WORKSPACE_LLM_PROVIDERS,
-  autoScrollToSelectedLLMProvider,
-  hasMissingCredentials,
-  validatedModelSelection,
-} from "./utils";
-import LLMSelectorSidePanel from "./LLMSelector";
+import { PROVIDER_DEFAULT_MODELS } from "@/hooks/useGetProvidersModels";
+import { WORKSPACE_LLM_PROVIDERS, hasMissingCredentials } from "./utils";
 import { NoSetupWarning } from "./SetupProvider";
 import showToast from "@/utils/toast";
 import Workspace from "@/models/workspace";
 import System from "@/models/system";
+import ModelRouter from "@/models/modelRouter";
 
 export default function LLMSelectorModal({
   workspaceSlug = null,
@@ -29,9 +23,8 @@ export default function LLMSelectorModal({
   const [selectedLLMProvider, setSelectedLLMProvider] = useState(null);
   const [selectedLLMModel, setSelectedLLMModel] = useState("");
   const [selectedRouterId, setSelectedRouterId] = useState(null);
-  const [availableProviders, setAvailableProviders] = useState(
-    WORKSPACE_LLM_PROVIDERS
-  );
+  const [availableModels, setAvailableModels] = useState([]);
+  const [modelsLoading, setModelsLoading] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [missingCredentials, setMissingCredentials] = useState(false);
@@ -39,20 +32,23 @@ export default function LLMSelectorModal({
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
+    let cancelled = false;
     Promise.all([Workspace.bySlug(slug), System.keys()])
-      .then(([workspace, systemSettings]) => {
+      .then(async ([workspace, systemSettings]) => {
         const savedProvider =
           workspace.chatProvider ?? systemSettings.LLMProvider;
         const savedModel = workspace.chatModel ?? systemSettings.LLMModel;
         const providerToSelect = initialProvider ?? savedProvider;
+        const routerId =
+          workspace.router_id || systemSettings?.ModelRouterId || null;
+        const modelToSelect =
+          providerToSelect === "anythingllm-router" ? routerId : savedModel;
 
+        if (cancelled) return;
         setSettings(systemSettings);
         setSelectedLLMProvider(providerToSelect);
-        autoScrollToSelectedLLMProvider(providerToSelect);
-        setSelectedLLMModel(savedModel);
-        setSelectedRouterId(
-          workspace.router_id || systemSettings?.ModelRouterId || null
-        );
+        setSelectedLLMModel(modelToSelect || "");
+        setSelectedRouterId(routerId);
 
         if (initialProvider && initialProvider !== savedProvider) {
           setHasChanges(true);
@@ -60,25 +56,77 @@ export default function LLMSelectorModal({
             hasMissingCredentials(systemSettings, initialProvider)
           );
         }
+
+        setModelsLoading(true);
+        const configuredProviders = WORKSPACE_LLM_PROVIDERS.filter(
+          (provider) =>
+            provider.value !== "anythingllm-router" &&
+            !hasMissingCredentials(systemSettings, provider.value)
+        );
+        const [providerModels, routers] = await Promise.all([
+          Promise.all(
+            configuredProviders.map(async (provider) => {
+              const { models = [] } = await System.customModels(provider.value);
+              const discoveredModels = Array.isArray(models)
+                ? models
+                : Object.values(models).flat();
+              const modelsById = new Map();
+
+              for (const model of [
+                ...(PROVIDER_DEFAULT_MODELS[provider.value] || []),
+                ...discoveredModels,
+              ]) {
+                const modelId = typeof model === "string" ? model : model?.id;
+                if (!modelId || modelsById.has(modelId)) continue;
+                modelsById.set(modelId, {
+                  provider: provider.value,
+                  model: modelId,
+                  label:
+                    typeof model === "string" ? model : model.name || model.id,
+                  providerName: provider.name,
+                });
+              }
+
+              return [...modelsById.values()];
+            })
+          ),
+          ModelRouter.getAll(),
+        ]);
+        const modelOptions = [
+          ...providerModels.flat(),
+          ...routers.map((router) => ({
+            provider: "anythingllm-router",
+            model: String(router.id),
+            label: router.name,
+            providerName: "Model Router",
+          })),
+        ];
+
+        if (cancelled) return;
+        setAvailableModels(modelOptions);
+        setModelsLoading(false);
       })
-      .finally(() => setLoading(false));
+      .catch((error) => console.error(error))
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+          setModelsLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
-  function handleSearch(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const filteredProviders = WORKSPACE_LLM_PROVIDERS.filter((provider) =>
-      provider.name.toLowerCase().includes(searchTerm)
-    );
-    setAvailableProviders(filteredProviders);
-  }
-
-  function handleProviderSelection(provider) {
+  function handleModelSelection(value) {
+    const [provider, model] = JSON.parse(value);
     setSelectedLLMProvider(provider);
-    setAvailableProviders(WORKSPACE_LLM_PROVIDERS);
-    autoScrollToSelectedLLMProvider(provider, 50);
-    document.getElementById("llm-search-input").value = "";
+    setSelectedLLMModel(model);
+    setSelectedRouterId(
+      provider === "anythingllm-router" ? Number(model) : null
+    );
+    setMissingCredentials(false);
     setHasChanges(true);
-    setMissingCredentials(hasMissingCredentials(settings, provider));
   }
 
   async function handleSave() {
@@ -94,10 +142,10 @@ export default function LLMSelectorModal({
         ? { chatProvider: selectedLLMProvider, router_id: selectedRouterId }
         : {
             chatProvider: selectedLLMProvider,
-            chatModel: validatedModelSelection(selectedLLMModel),
+            chatModel: selectedLLMModel,
           };
 
-      if (!isRouter && !updateData.chatModel)
+      if (!isRouter && !selectedLLMModel)
         throw new Error(t("model-router.chat.invalid-model"));
 
       const { message } = await Workspace.update(slug, updateData);
@@ -111,10 +159,6 @@ export default function LLMSelectorModal({
       setSaving(false);
     }
   }
-
-  const providerName =
-    WORKSPACE_LLM_PROVIDERS.find((p) => p.value === selectedLLMProvider)
-      ?.name || selectedLLMProvider;
 
   if (loading) {
     return (
@@ -131,45 +175,48 @@ export default function LLMSelectorModal({
   }
 
   return (
-    <div id="llm-selector-modal" className="w-full h-[388px] flex">
-      <LLMSelectorSidePanel
-        availableProviders={availableProviders}
-        selectedLLMProvider={selectedLLMProvider}
-        onSearchChange={handleSearch}
-        onProviderClick={handleProviderSelection}
-      />
-      <div className="w-[60%] h-full p-[18px] flex flex-col gap-2.5">
-        <div className="flex flex-col gap-[15px]">
-          <div className="flex flex-col gap-1.5">
-            <p className="text-sm font-medium text-white light:text-slate-800">
-              {t("chat_window.workspace_llm_manager.available_models", {
-                provider: providerName,
-              })}
-            </p>
-            <p className="text-xs font-medium text-zinc-400 light:text-slate-500">
-              {t(
-                "chat_window.workspace_llm_manager.available_models_description"
-              )}
-            </p>
-          </div>
-          {!missingCredentials &&
-            (selectedLLMProvider === "anythingllm-router" ? (
-              <RouterPickerSelection
-                selectedRouterId={selectedRouterId}
-                setSelectedRouterId={setSelectedRouterId}
-                setHasChanges={setHasChanges}
-              />
-            ) : (
-              <ChatModelSelection
-                provider={selectedLLMProvider}
-                setHasChanges={setHasChanges}
-                selectedLLMModel={selectedLLMModel}
-                setSelectedLLMModel={setSelectedLLMModel}
-              />
-            ))}
-        </div>
+    <div
+      id="llm-selector-modal"
+      className="w-fit max-w-full h-[388px] p-[18px] flex flex-col"
+    >
+      <select
+        id="workspace-llm-model-select"
+        aria-label={t("chat_window.select_model")}
+        required={true}
+        disabled={modelsLoading || availableModels.length === 0}
+        value={
+          selectedLLMProvider &&
+          selectedLLMModel &&
+          availableModels.some(
+            (option) =>
+              option.provider === selectedLLMProvider &&
+              option.model === String(selectedLLMModel)
+          )
+            ? JSON.stringify([selectedLLMProvider, selectedLLMModel])
+            : ""
+        }
+        onChange={(e) => handleModelSelection(e.target.value)}
+        className="bg-zinc-900 light:bg-white text-white light:text-slate-900 text-sm rounded-lg h-9 w-max max-w-full px-2.5 outline-none border border-zinc-700 light:border-slate-400 cursor-pointer"
+      >
+        <option value="" disabled={true}>
+          {modelsLoading
+            ? "-- waiting for models --"
+            : availableModels.length === 0
+              ? "-- no available models --"
+              : "-- select a model --"}
+        </option>
+        {availableModels.map((option) => (
+          <option
+            key={JSON.stringify([option.provider, option.model])}
+            value={JSON.stringify([option.provider, option.model])}
+          >
+            {option.label} ({option.providerName})
+          </option>
+        ))}
+      </select>
+      {missingCredentials && availableModels.length === 0 && (
         <NoSetupWarning
-          showing={missingCredentials}
+          showing={true}
           onSetupClick={() => {
             window.dispatchEvent(
               new CustomEvent(PROVIDER_SETUP_EVENT, {
@@ -183,6 +230,8 @@ export default function LLMSelectorModal({
             );
           }}
         />
+      )}
+      <div className="mt-auto">
         {hasChanges && !missingCredentials && (
           <button
             type="button"
