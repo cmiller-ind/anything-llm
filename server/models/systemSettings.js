@@ -6,6 +6,7 @@ const { default: slugify } = require("slugify");
 const { isValidUrl, safeJsonParse } = require("../utils/http");
 const prisma = require("../utils/prisma");
 const { MetaGenerator } = require("../utils/boot/MetaGenerator");
+const { sanitizeThemePalettes } = require("../utils/themePalettes");
 const { PGVector } = require("../utils/vectorDbProviders/pgvector");
 const { NativeEmbedder } = require("../utils/EmbeddingEngines/native");
 const { getBaseLLMProviderModel } = require("../utils/helpers");
@@ -96,6 +97,7 @@ const SystemSettings = {
     // Meta page customization
     "meta_page_title",
     "meta_page_favicon",
+    "theme_palettes",
 
     // beta feature flags
     "experimental_live_file_sync",
@@ -108,6 +110,7 @@ const SystemSettings = {
     "memory_auto_extraction",
   ],
   validations: {
+    theme_palettes: (update) => JSON.stringify(sanitizeThemePalettes(update)),
     footer_data: (updates) => {
       try {
         const array = JSON.parse(updates)
@@ -171,6 +174,7 @@ const SystemSettings = {
             "you-search",
             "keenable-search",
             "anysearch-search",
+            "firecrawl-search",
           ].includes(update)
         )
           throw new Error("Invalid SERP provider.");
@@ -371,6 +375,9 @@ const SystemSettings = {
           "clientSecret",
           (v) => !v.match(/^\*+$/)
         );
+        mergeStringField(mergedConfig, newConfig, "authType", (v) =>
+          Object.values(OutlookBridge.AUTH_TYPES).includes(v)
+        );
 
         if (newConfig.accessToken !== undefined) {
           mergedConfig.accessToken = newConfig.accessToken;
@@ -528,6 +535,9 @@ const SystemSettings = {
       ImageGenerationLemonadeApiKey: !!process.env.IMAGE_GEN_LEMONADE_API_KEY,
       ImageGenerationLocalAiBasePath: process.env.IMAGE_GEN_LOCALAI_BASE_PATH,
       ImageGenerationLocalAiApiKey: !!process.env.IMAGE_GEN_LOCALAI_API_KEY,
+      ImageGenerationLlmmanBasePath: process.env.IMAGE_GEN_LLMMAN_BASE_PATH,
+      ImageGenerationLlmmanAuthToken: !!process.env.IMAGE_GEN_LLMMAN_AUTH_TOKEN,
+      ImageGenerationGeminiApiKey: !!process.env.IMAGE_GEN_GEMINI_API_KEY,
 
       // --------------------------------------------------------
       // VectorDB Provider Selection Settings & Configs
@@ -624,6 +634,7 @@ const SystemSettings = {
       AgentKeenableApiKey: !!process.env.AGENT_KEENABLE_API_KEY || null,
       AgentKeenableApiUrl: process.env.AGENT_KEENABLE_API_URL || null,
       AgentAnySearchApiKey: !!process.env.AGENT_ANYSEARCH_API_KEY || null,
+      AgentFirecrawlApiKey: !!process.env.AGENT_FIRECRAWL_API_KEY || null,
 
       // --------------------------------------------------------
       // Compliance Settings
@@ -876,6 +887,9 @@ const SystemSettings = {
       // Weaviate DB Keys
       WeaviateEndpoint: process.env.WEAVIATE_ENDPOINT,
       WeaviateApiKey: !!process.env.WEAVIATE_API_KEY,
+      WeaviateDeployment: process.env.WEAVIATE_DEPLOYMENT,
+      WeaviateGrpcHost: process.env.WEAVIATE_GRPC_HOST,
+      WeaviateGrpcPort: process.env.WEAVIATE_GRPC_PORT,
 
       // QDrant DB Keys
       QdrantEndpoint: process.env.QDRANT_ENDPOINT,
@@ -904,7 +918,7 @@ const SystemSettings = {
     return {
       // OpenAI Keys
       OpenAiKey: !!process.env.OPEN_AI_KEY,
-      OpenAiModelPref: process.env.OPEN_MODEL_PREF || "gpt-4.1-nano",
+      OpenAiModelPref: process.env.OPEN_MODEL_PREF || "gpt-5.6-luna",
 
       // Azure + OpenAI Keys
       AzureOpenAiEndpoint: process.env.AZURE_OPENAI_ENDPOINT,
@@ -955,6 +969,7 @@ const SystemSettings = {
       // TogetherAI Keys
       TogetherAiApiKey: !!process.env.TOGETHER_AI_API_KEY,
       TogetherAiModelPref: process.env.TOGETHER_AI_MODEL_PREF,
+      TogetherAiMaxTokens: process.env.TOGETHER_AI_MAX_TOKENS,
 
       // Fireworks AI API Keys
       FireworksAiLLMApiKey: !!process.env.FIREWORKS_AI_LLM_API_KEY,
@@ -1079,6 +1094,9 @@ const SystemSettings = {
       LemonadeLLMModelPref: process.env.LEMONADE_LLM_MODEL_PREF,
       LemonadeLLMModelTokenLimit:
         process.env.LEMONADE_LLM_MODEL_TOKEN_LIMIT || 8192,
+
+      // Embedded Lemonade Keys
+      ...require("../utils/AiProviders/embeddedLemonade/config").settings(),
 
       // Minimax Keys
       MinimaxApiKey: !!process.env.MINIMAX_API_KEY,
