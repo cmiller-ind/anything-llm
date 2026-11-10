@@ -130,7 +130,7 @@ export default function WorkspaceModelPicker({ workspaceSlug = null }) {
         </button>
 
         {showSelector && (
-          <div className="absolute left-0 top-full mt-1 bg-zinc-800 light:bg-white border border-zinc-700 light:border-slate-300 rounded-xl shadow-lg w-[620px] overflow-hidden">
+          <div className="absolute left-0 top-full mt-1 bg-zinc-800 light:bg-white border border-zinc-700 light:border-slate-300 rounded-xl shadow-lg w-fit max-w-[calc(100vw-2rem)] overflow-hidden">
             <LLMSelectorModal
               key={refreshKey}
               workspaceSlug={slug}
