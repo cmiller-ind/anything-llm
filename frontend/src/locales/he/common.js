@@ -789,6 +789,18 @@ const TRANSLATIONS = {
             "מספר המינימום של כלי העבודה שניתן לבחור עבור כל שאילתה. אנו ממליצים להגדיר ערך גבוה יותר עבור מודלים עם הקשר רחב יותר.",
         },
       },
+      "markdown-skill-injection": {
+        title: "מקסימום כישורי Markdown שהוזרקו",
+        description:
+          "מספר הכישורי ה-Markdown המקסימלי המוזרק ל-prompt המערכת כאשר יש יותר כישורים מהמגבלה. בגבול או מתחתיו, תמיד מוזרקים כל הכישורים.",
+      },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "אפשר לסוכן לשאול שאלות הבהרה.",
         "beta-badge": "בטא",

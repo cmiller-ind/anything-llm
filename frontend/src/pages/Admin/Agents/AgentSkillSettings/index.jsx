@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import MaxToolCallStack from "./MaxToolCallStack";
 import AgentClarifyingQuestions from "./AgentClarifyingQuestions";
 import AgentSkillReranker from "./AgentSkillReranker";
+import MarkdownSkillInjectionLimit from "./MarkdownSkillInjectionLimit";
+import MarkdownSkillRelevanceThreshold from "./MarkdownSkillRelevanceThreshold";
 
 export default function AgentSkillSettings() {
   const { isOpen, openModal, closeModal } = useModal();
@@ -33,6 +35,9 @@ function AgentSkillSettingsModal({ isOpen, closeModal }) {
         <MaxToolCallStack />
         <div className="border-b border-zinc-800 light:border-slate-200 h-[1px] w-full" />
         <AgentSkillReranker />
+        <div className="border-b border-zinc-800 light:border-slate-200 h-[1px] w-full" />
+        <MarkdownSkillInjectionLimit />
+        <MarkdownSkillRelevanceThreshold />
         <div className="border-b border-zinc-800 light:border-slate-200 h-[1px] w-full" />
         <AgentClarifyingQuestions />
       </div>

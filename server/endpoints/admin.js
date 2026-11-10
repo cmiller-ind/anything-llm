@@ -26,6 +26,11 @@ const {
 const { validatedRequest } = require("../utils/middleware/validatedRequest");
 const ImportedPlugin = require("../utils/agents/imported");
 const {
+  store: markdownSkillStore,
+  isValidName: isValidMarkdownSkillName,
+  getSkillDetectionStatus,
+} = require("../utils/skills");
+const {
   simpleSSOLoginDisabledMiddleware,
 } = require("../utils/middleware/simpleSSOEnabled");
 const {
@@ -449,6 +454,9 @@ function adminEndpoints(app) {
             case "memory_auto_extraction":
               requestedSettings[label] = setting?.value ?? "true";
               break;
+            case "markdown_skills_max_injected":
+              requestedSettings[label] = setting?.value ?? "5";
+              break;
             default:
               break;
           }
@@ -496,6 +504,145 @@ function adminEndpoints(app) {
       } catch (e) {
         console.error(e);
         response.sendStatus(500).end();
+      }
+    }
+  );
+
+  // ---------------------------------------------------------------------
+  // Markdown Skills (agentskills.io format) - stored as SKILL.md directories
+  // under storage/plugins/skills. These are context skills, not tools: they
+  // are auto-detected as relevant to a prompt and injected into the LLM.
+  // ---------------------------------------------------------------------
+  app.get(
+    "/admin/markdown-skills",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (_request, response) => {
+      try {
+        const skills = markdownSkillStore.list();
+        // Broken entries ({ dir, error }) are surfaced separately so the UI
+        // can show them instead of them silently disappearing.
+        const valid = skills.filter((s) => !s.error);
+        const broken = skills
+          .filter((s) => s.error)
+          .map((s) => ({ dir: s.dir || s.name, error: s.error }));
+        response.status(200).json({
+          skills: valid,
+          brokenSkills: broken,
+          detection: getSkillDetectionStatus(),
+          error: null,
+        });
+      } catch (e) {
+        console.error(e);
+        response.status(500).json({
+          skills: null,
+          brokenSkills: null,
+          error: e.message,
+        });
+      }
+    }
+  );
+
+  app.get(
+    "/admin/markdown-skills/:name",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const { name } = request.params;
+        if (!isValidMarkdownSkillName(name)) {
+          response.status(400).json({
+            skill: null,
+            error: "Invalid skill name.",
+          });
+          return;
+        }
+        const skill = markdownSkillStore.get(name);
+        if (!skill) {
+          response.status(404).json({ skill: null, error: "Skill not found." });
+          return;
+        }
+        response.status(200).json({ skill, error: null });
+      } catch (e) {
+        console.error(e);
+        response.status(500).json({ skill: null, error: e.message });
+      }
+    }
+  );
+
+  app.post(
+    "/admin/markdown-skills",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const body = reqBody(request);
+        const skill = markdownSkillStore.save(body);
+        response.status(200).json({ skill, error: null });
+      } catch (e) {
+        console.error(e);
+        response.status(400).json({ skill: null, error: e.message });
+      }
+    }
+  );
+
+  app.delete(
+    "/admin/markdown-skills/:name",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const { name } = request.params;
+        if (!isValidMarkdownSkillName(name)) {
+          response
+            .status(400)
+            .json({ success: false, error: "Invalid skill name." });
+          return;
+        }
+        const deleted = markdownSkillStore.delete(name);
+        if (!deleted) {
+          response
+            .status(404)
+            .json({ success: false, error: "Skill not found." });
+          return;
+        }
+        response.status(200).json({ success: true, error: null });
+      } catch (e) {
+        console.error(e);
+        response.status(500).json({ success: false, error: e.message });
+      }
+    }
+  );
+
+  // Rename a skill directory (used to resolve a name/folder mismatch by
+  // keeping the folder name). The frontmatter `name` is rewritten to match.
+  app.post(
+    "/admin/markdown-skills/:name/rename",
+    [validatedRequest, flexUserRoleValid([ROLES.admin, ROLES.manager])],
+    async (request, response) => {
+      try {
+        const { name } = request.params;
+        const body = reqBody(request);
+        const newName =
+          typeof body?.newName === "string" ? body.newName.trim() : "";
+        if (
+          !isValidMarkdownSkillName(name) ||
+          !isValidMarkdownSkillName(newName)
+        ) {
+          response.status(400).json({
+            skill: null,
+            error: "Invalid skill name.",
+          });
+          return;
+        }
+        const skill = markdownSkillStore.rename(name, newName);
+        if (!skill) {
+          response.status(404).json({
+            skill: null,
+            error: "Skill not found or target name is taken.",
+          });
+          return;
+        }
+        response.status(200).json({ skill, error: null });
+      } catch (e) {
+        console.error(e);
+        response.status(500).json({ skill: null, error: e.message });
       }
     }
   );

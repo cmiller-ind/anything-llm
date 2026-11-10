@@ -839,6 +839,18 @@ const TRANSLATIONS = {
             "El número máximo de herramientas que se pueden seleccionar para cada consulta. Recomendamos establecer este valor en un número más alto para modelos con un contexto más amplio.",
         },
       },
+      "markdown-skill-injection": {
+        title: "Máximo de habilidades Markdown inyectadas",
+        description:
+          "El número máximo de habilidades Markdown inyectadas en el prompt del sistema cuando hay más habilidades que este límite. Al límite o por debajo, siempre se inyectan todas las habilidades.",
+      },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "Permitir que el agente formule preguntas para aclarar.",
         "beta-badge": "Versión de prueba",

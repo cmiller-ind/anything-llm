@@ -810,6 +810,18 @@ const TRANSLATIONS = {
             "प्रत्येक क्वेरी के लिए चुने जा सकने वाले टूल्स की अधिकतम संख्या। बड़े संदर्भ वाले मॉडल के लिए हम इसे अधिक मान पर सेट करने की सलाह देते हैं।",
         },
       },
+      "markdown-skill-injection": {
+        title: "अधिकतम इंजेक्ट किए गए Markdown कौशल",
+        description:
+          "जब इस सीमा से अधिक कौशल हों तो सिस्टम प्रॉम्प्ट में इंजेक्ट किए जाने वाले Markdown कौशलों की अधिकतम संख्या। सीमा पर या उसके नीचे, सभी कौशल हमेशा इंजेक्ट किए जाते हैं।",
+      },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "एजेंट को स्पष्टीकरण हेतु प्रश्न पूछने दें",
         "beta-badge": "BETA",

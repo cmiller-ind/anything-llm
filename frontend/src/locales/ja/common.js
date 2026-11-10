@@ -764,6 +764,18 @@ const TRANSLATIONS = {
             "各クエリで選択できるツール数の上限。大規模なコンテキストモデルを使用する場合は、この値をより高い値に設定することをお勧めします。",
         },
       },
+      "markdown-skill-injection": {
+        title: "注入する Markdown スキルの最大数",
+        description:
+          "スキルがこの上限より多い場合、システムプロンプトに注入する Markdown スキルの最大数です。上限以下では、常にすべてのスキルが注入されます。",
+      },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title:
           "エージェントが、詳細を確認するための質問をしてもらうことを許可する",

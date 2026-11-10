@@ -772,6 +772,18 @@ const TRANSLATIONS = {
             "الحد الأقصى لعدد الأدوات التي يمكن اختيارها لكل استعلام. ونوصي بتعيين هذه القيمة على قيم أعلى بالنسبة للنماذج ذات السياق الأكبر.",
         },
       },
+      "markdown-skill-injection": {
+        title: "الحد الأقصى للمهارات Markdown المُحقنة",
+        description:
+          "العدد الأقصى لمهارات Markdown التي تُحقن في توجيه النظام عند وجود مهارات أكثر من هذا الحد. عند أو أقل من الحد، تُحقن جميع المهارات دائمًا.",
+      },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "اسمح للمتحدث بطرح أسئلة توضيحية.",
         "beta-badge": "مرحلة تجريبية",

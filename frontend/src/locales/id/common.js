@@ -816,6 +816,18 @@ const TRANSLATIONS = {
             "Jumlah maksimum alat yang dipilih untuk setiap kueri. Kami merekomendasikan pengaturan ini ke nilai yang lebih tinggi untuk model konteks besar.",
         },
       },
+      "markdown-skill-injection": {
+        title: "Maksimal keterampilan Markdown yang disuntikkan",
+        description:
+          "Jumlah maksimum keterampilan Markdown yang disuntikkan ke prompt sistem ketika ada lebih banyak keterampilan dari batas ini. Pada atau di bawah batas, semua keterampilan selalu disuntikkan.",
+      },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "Izinkan agen mengajukan pertanyaan klarifikasi",
         "beta-badge": "BETA",

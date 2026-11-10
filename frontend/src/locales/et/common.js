@@ -802,6 +802,18 @@ const TRANSLATIONS = {
             "Maksimaalne arv tööriistu, mida saab valida igale küsimusele. Soovitame seada see väärtus suuremate kontekstmudelite jaoks suuremaks.",
         },
       },
+      "markdown-skill-injection": {
+        title: "Maks. sisestatud Markdown-oskused",
+        description:
+          "Maksimaalne arv Markdown-oskusi, mis sisestatakse süsteemi prompti, kui oskusi on selle piirangust rohkem. Piirangul või allpool seda sisestatakse alati kõik oskused.",
+      },
+      "markdown-skill-relevance": {
+        title: "Markdown Skills: Relevance Threshold",
+        description:
+          "Each skill is scored against your prompt before injection. Raise this to inject only highly relevant skills (fewer tokens) or lower it to inject more aggressively. Set to 0 to always inject.",
+        low: "Loose",
+        high: "Strict",
+      },
       "clarifying-questions": {
         title: "Luba vahendajal esitada selgitavaid küsimusi",
         "beta-badge": "BEETA",
