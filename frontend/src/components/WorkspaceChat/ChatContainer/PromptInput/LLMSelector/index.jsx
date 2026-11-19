@@ -47,9 +47,6 @@ export default function LLMSelectorModal({
 
         if (cancelled) return;
         setSettings(systemSettings);
-        setAvailableProviders(
-          withEmbeddedLemonade(WORKSPACE_LLM_PROVIDERS, systemSettings)
-        );
         setSelectedLLMProvider(providerToSelect);
         setSelectedLLMModel(modelToSelect || "");
         setSelectedRouterId(routerId);
@@ -124,22 +121,6 @@ export default function LLMSelectorModal({
 
   const providers = withEmbeddedLemonade(WORKSPACE_LLM_PROVIDERS, settings);
 
-  function handleSearch(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const filteredProviders = providers.filter((provider) =>
-      provider.name.toLowerCase().includes(searchTerm)
-    );
-    setAvailableProviders(filteredProviders);
-  }
-
-  function handleProviderSelection(provider) {
-    setSelectedLLMProvider(provider);
-    setAvailableProviders(providers);
-    autoScrollToSelectedLLMProvider(provider, 50);
-    document.getElementById("llm-search-input").value = "";
-    setHasChanges(true);
-  }
-
   function handleModelSelection(value) {
     const [provider, model] = JSON.parse(value);
     setSelectedLLMProvider(provider);
@@ -181,10 +162,6 @@ export default function LLMSelectorModal({
       setSaving(false);
     }
   }
-
-  const providerName =
-    providers.find((p) => p.value === selectedLLMProvider)?.name ||
-    selectedLLMProvider;
 
   if (loading) {
     return (
