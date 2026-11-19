@@ -9,6 +9,17 @@ const { default: slugify } = require("slugify");
 const PDFLoader = require("./PDFLoader");
 const OCRLoader = require("../../../utils/OCRLoader");
 
+/**
+ * Best-effort author from a PDF's Info dictionary. Author names the person who
+ * wrote the document, so it is preferred; Creator names the application that
+ * produced the PDF and is used only when Author is missing.
+ * @param {Object|undefined} info - the Info dictionary from pdf.js getMetadata()
+ * @returns {string|null}
+ */
+function pdfAuthor(info) {
+  return info?.Author || info?.Creator || null;
+}
+
 async function asPdf({
   fullFilePath = "",
   filename = "",
@@ -23,7 +34,8 @@ async function asPdf({
   const pageContent = [];
   let docs = await pdfLoader.load();
 
-  if (docs.length === 0) {
+  // A scan can carry a text layer with no text in it, which gives empty pages.
+  if (!docs.some((doc) => doc.pageContent?.length)) {
     console.log(
       `[asPDF] No text content found for ${filename}. Will attempt OCR parse.`
     );
@@ -59,7 +71,7 @@ async function asPdf({
     title: metadata.title || filename,
     docAuthor:
       metadata.docAuthor ||
-      docs[0]?.metadata?.pdf?.info?.Creator ||
+      pdfAuthor(docs[0]?.metadata?.pdf?.info) ||
       "no author found",
     description:
       metadata.description ||
